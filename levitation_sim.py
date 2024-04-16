@@ -9,12 +9,12 @@ class MagLevParams:
     g: float = 9.81     # [m/s^2]
     beta: float = 1e-6   # [N*m^2/V]
     x_eq: float = 0.01  # [m]
-    v_eq: float = (mass * g * x_eq**2)/beta
+    v_eq: float = (mass * g * x_eq**2)/beta     # From equilibrium equation about which we linearized
 
 class MagLev:
-    def __init__(self, x_eq = 0.01, v_0 = 0.0, del_x_0 = 0.001, del_t_0 = 0.0001):
+    def __init__(self, x_eq = 0.01, v_0 = 0.0, del_x_0 = 0.0, del_t_0 = 0.0001):
         self.params = MagLevParams()
-        self.params.x_eq = x_eq
+        self.params.x_eq = x_eq     # Change equilibrium balancing point (depends on chosen v_eq)
         self.ts = [0.0, del_t_0]
         del_v_0 = v_0 - (self.params.mass * self.params.g * self.params.x_eq**2) / self.params.beta
         self.del_vs = [del_v_0, del_v_0]
@@ -52,20 +52,22 @@ class Controller:
         self.e_prev = e
         return v
 
-del_t = 0.0001  # [s]
-x_eq = 0.01     # [m]
-sys = MagLev(x_eq=x_eq)
-_, _, del_x= sys.get_current_state()
+if __name__ == "__main__":
 
-# TODO: replace this number with the actual height of the setup (from electromagnet to base)
-x_max = 0.2 
+    del_t = 0.0001  # [s]
+    x_eq = 0.01     # [m]
+    sys = MagLev(x_eq=x_eq)
+    _, _, del_x= sys.get_current_state()
 
-while del_x <= x_max - x_eq:
-    sys.update(del_t, 1.0)
-    t, del_v, del_x= sys.get_current_state()
-    print(f"{t=}, {del_v=}, {del_x=}")
+    # TODO: replace this number with the actual height of the setup (from electromagnet to base)
+    x_max = 0.2 
 
-ts, del_vs, del_xs = sys.get_all_states()
+    while del_x <= x_max - x_eq and x_eq + del_x >= 0:
+        sys.update(del_t, 0.2)
+        t, del_v, del_x= sys.get_current_state()
+        print(f"{t=}, {del_v=}, {del_x=}")
 
-plt.plot(ts, del_xs)
-plt.show()
+    ts, del_vs, del_xs = sys.get_all_states()
+
+    plt.plot(ts, del_xs)
+    plt.show()
