@@ -4,7 +4,8 @@ from scipy.optimize import curve_fit
 
 
 
-x = np.linspace(0, 255, num = 256)
+x = np.linspace(0, 99, num = 100)
+
 y_list = []
 
 file1 = open('em_sweep.txt', 'r')
@@ -25,6 +26,7 @@ y = np.array(y_list)
 # plotting raw data
 fig, ax = plt.subplots()
 ax.plot(x,y)
+ax.invert_yaxis()
 plt.xlabel("Electromagnet PWM Pulse")
 plt.ylabel("Hall Effect Sensor Raw Data")
 plt.title("Electromagnet Sweep Calibration")
