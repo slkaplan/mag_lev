@@ -4,11 +4,10 @@ from dataclasses import dataclass
 
 @dataclass
 class MagLevParams:
-    # TODO: Make these numbers real
-    mass: float = 0.020 # [kg]
-    g: float = 9.81     # [m/s^2]
-    beta: float = 1e-4  # [N*m^2/V]
-    x_eq: float = 0.02  # [m]
+    mass: float = 0.012488  # [kg]
+    g: float = 9.81         # [m/s^2]
+    beta: float = 3.432e-6  # [N*m^2/V]
+    x_eq: float = 0.0082    # [m]
     v_eq: float = (mass * g * x_eq**2)/beta     # From equilibrium equation about which we linearized
 
 class MagLevODE:
@@ -75,24 +74,23 @@ class Controller:
 
 if __name__ == "__main__":
     del_t = 0.0001  # [s]
-    x_eq = 0.02     # [m]
+    x_eq = MagLevParams.x_eq    # [m]
     v_eq = (MagLevParams.mass * MagLevParams.g * x_eq**2)/MagLevParams.beta
     print(f"{v_eq=}")
     v_0 = v_eq
 
-    K = 300
-    Kp = K * 20
+    K = 1200
+    Kp = K * 100
     Ki = K * 0
     Kd = K * 1
 
     controller = Controller(Kp = Kp, Ki = Ki, Kd = Kd)
 
-    sys = MagLevODE(x_eq=x_eq, v_0=v_0, del_x_0=-0.003)
+    sys = MagLevODE(x_eq=x_eq, v_0=v_0, del_x_0=-0.0002)
     t_current, _, state = sys.get_current_state()
     del_x = state[0]
 
-    # TODO: replace this number with the actual height of the setup (from electromagnet to base)
-    x_max = 0.15
+    x_max = 0.141
 
     while x_eq + del_x <= x_max and x_eq + del_x >= 0 and t_current < 8.0:
         v = np.clip(controller.command(del_t, 0, sys.sensor()), -12, 12)
