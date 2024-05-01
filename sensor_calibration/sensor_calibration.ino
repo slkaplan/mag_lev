@@ -1,12 +1,12 @@
-#define MOTOR_IN1 10
-#define MOTOR_IN2 11
+#define MOTOR_IN1 6
+#define MOTOR_IN2 5
 
 const byte numChars = 32;
 char receivedChars[numChars];   // an array to store the received data
 
 boolean newData = false;
-
-int dataNumber = 0;             // new for this version
+int dataNumber = 0; 
+int mag_strength = 250;             // new for this version
 
 int hall_effect_sensor = A0; 
 int hall_effect_val; 
@@ -16,14 +16,14 @@ float distance = 0.0;
 void setup() {
 
   pinMode(A0, INPUT);   // set analog pin as input
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   pinMode(MOTOR_IN1, OUTPUT);
   pinMode(MOTOR_IN2, OUTPUT);
   
   // set for attraction mode
   digitalWrite(MOTOR_IN2, LOW);
-  analogWrite(MOTOR_IN1, dataNumber);
+  analogWrite(MOTOR_IN1, mag_strength);
 
   // for (int i = 0; i <= 255; i++) {
   //   analogWrite(MOTOR_IN1, i);
@@ -41,19 +41,11 @@ void setup() {
 
 void loop() {
   hall_effect_val = analogRead(hall_effect_sensor);
-  distance = sensor_to_distance(hall_effect_val);
-  Serial.println(distance);
-  // recvWithEndMarker();
-  // showNewNumber();
+  //distance = sensor_to_distance(hall_effect_val);
+  Serial.println(hall_effect_val);
 
-  // for (int i = 0; i <= 255; i++) {
-  //   analogWrite(MOTOR_IN2, i);
-  //   Serial.println((int)i);
-  // }
-
-  // hall_effect_val = analogRead(hall_effect_sensor);   // read sensor value
-  // // Serial.println(hall_effect_val);    
-  // delay(500);                            // print value to serial
+  delay(250);
+  
 
 
 }
