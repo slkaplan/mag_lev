@@ -6,9 +6,9 @@ from dataclasses import dataclass
 class MagLevParams:
     mass: float = 0.012488  # [kg]
     g: float = 9.81         # [m/s^2]
-    beta: float = 3.432e-6  # [N*m^2/V]
-    x_eq: float = 0.0082    # [m]
-    v_eq: float = (mass * g * x_eq**2)/beta     # From equilibrium equation about which we linearized
+    beta: float = 4.379e-8  # [N*m^2/V]
+    x_eq: float = 0.010     # [m]
+    v_eq: float = (mass * g * x_eq**3)/beta     # From equilibrium equation about which we linearized
 
 class MagLevODE:
     def __init__(self, x_eq = 0.01, v_0 = 0.0, del_x_0 = 0.0):
@@ -17,7 +17,7 @@ class MagLevODE:
 
         self.ts = [0.0]
 
-        del_v_0 = v_0 - (self.params.mass * self.params.g * self.params.x_eq**2) / self.params.beta
+        del_v_0 = v_0 - (self.params.mass * self.params.g * self.params.x_eq**3) / self.params.beta
         self.del_vs = [del_v_0]
         self.del_xs = [del_x_0]
         self.del_x_dots = [0.0]    # Assume always starting from rest
@@ -43,8 +43,8 @@ class MagLevODE:
 
         del_x_dot = y
         
-        y_dot = (((-self.params.beta) / (self.params.mass * self.params.x_eq**2)) * del_v +
-                 ((2 * self.params.g) / (self.params.x_eq**2)) * del_x)        
+        y_dot = (((-self.params.beta) / (self.params.mass * self.params.x_eq**3)) * del_v +
+                 ((3 * self.params.g) / (self.params.x_eq)) * del_x)        
 
         self.state = [del_x, y, del_x_dot, y_dot]
 
@@ -63,11 +63,11 @@ class Controller:
         self.e_total = 0.0
 
     def command(self, del_t, target_del_x, measured_del_x):
-        e = target_del_x - measured_del_x
+        e = measured_del_x - target_del_x
         P = self.Kp * e
         I = self.Ki * self.e_total * del_t
         D = self.Kd * ((e - self.e_prev)/del_t)
-        v = -(P + I + D)
+        v = P + I + D
         self.e_total += e
         self.e_prev = e
         return v
@@ -75,25 +75,25 @@ class Controller:
 if __name__ == "__main__":
     del_t = 0.0001  # [s]
     x_eq = MagLevParams.x_eq    # [m]
-    v_eq = (MagLevParams.mass * MagLevParams.g * x_eq**2)/MagLevParams.beta
+    v_eq = MagLevParams.v_eq    # V
     print(f"{v_eq=}")
     v_0 = v_eq
 
-    K = 1200
-    Kp = K * 100
+    K = 100
+    Kp = K * 30
     Ki = K * 0
     Kd = K * 1
 
     controller = Controller(Kp = Kp, Ki = Ki, Kd = Kd)
 
-    sys = MagLevODE(x_eq=x_eq, v_0=v_0, del_x_0=-0.0002)
+    sys = MagLevODE(x_eq=x_eq, v_0=v_0, del_x_0=0.001)
     t_current, _, state = sys.get_current_state()
     del_x = state[0]
 
     x_max = 0.141
 
-    while x_eq + del_x <= x_max and x_eq + del_x >= 0 and t_current < 8.0:
-        v = np.clip(controller.command(del_t, 0, sys.sensor()), -12, 12)
+    while x_eq + del_x <= x_max and x_eq + del_x >= 0 and t_current < 8:
+        v = np.clip(MagLevParams.v_eq + controller.command(del_t, 0, sys.sensor()), 1.74, 12)
         sys.update(del_t, v)
         t_current, del_v, state = sys.get_current_state()
         del_x = state[0]
