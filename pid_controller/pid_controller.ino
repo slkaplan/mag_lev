@@ -39,7 +39,7 @@ float e_total, e_prev;
 float e = 0;
 
 // PID tuning parameters
-int Kp=70, Ki=0, Kd = 5;
+int Kp=70, Ki=0, Kd = 0.000005;
 
 // setting setpoint in mm from bottom of electromagnet
 
@@ -89,12 +89,12 @@ void loop(){
 
   analog_voltage = constrain(output, 150, 255);
 
-  // analog_voltage = 0;
+  //analog_voltage = 0;
   digitalWrite(MOTOR_IN2, LOW);
   analogWrite(MOTOR_IN1, analog_voltage);
   
   unsigned long currentMicros = micros();
-  time_step = currentMicros - previousMicros;
+  time_step = (currentMicros - previousMicros) * 0.000001;
   previousMicros = currentMicros;
 }
 
